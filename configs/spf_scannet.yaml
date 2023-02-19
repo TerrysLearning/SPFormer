@@ -70,7 +70,6 @@ model:
   blocks: 5
   block_reps: 2
   media: 32
-  normalize_before: True
   return_blocks: True
   pool: mean
   num_class: 18

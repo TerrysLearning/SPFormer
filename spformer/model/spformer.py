@@ -22,7 +22,6 @@ class SPFormer(nn.Module):
         blocks: int = 5,
         block_reps: int = 2,
         media: int = 32,
-        normalize_before=True,
         return_blocks=True,
         pool='mean',
         num_class=18,
@@ -53,7 +52,6 @@ class SPFormer(nn.Module):
             block_reps,
             block,
             indice_key_id=1,
-            normalize_before=normalize_before,
             return_blocks=return_blocks,
         )
         self.output_layer = spconv.SparseSequential(norm_fn(media), nn.ReLU(inplace=True))
@@ -181,8 +179,3 @@ class SPFormer(nn.Module):
             x, _ = scatter_max(x, superpoints, dim=0)  # (B*M, media)
         return x
 
-
-
-'''
-edit 
-'''
