@@ -258,6 +258,13 @@ class ScanNetDataset(Dataset):
         spatial_shape = np.clip((coords.max(0)[0][1:] + 1).numpy(), self.voxel_cfg.spatial_shape[0], None)  # long [3]
         voxel_coords, p2v_map, v2p_map = pointgroup_ops.voxelization_idx(coords, len(batch), self.mode)
 
+        # print(voxel_coords.size())
+        # print('feats', feats[0:10])
+        # print('p2vmap', p2v_map.size())
+        # print('v2pmap', v2p_map.size())
+        # print('v2pmap', v2p_map[0:100])
+        # assert 0
+
         return {
             'scan_ids': scan_ids,
             'voxel_coords': voxel_coords,

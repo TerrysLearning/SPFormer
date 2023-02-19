@@ -28,26 +28,16 @@ class ResidualBlock(SparseModule):
             norm_caller = gorilla.nn.get_torch_layer_caller(norm_fn.pop('type'))
             norm_fn = functools.partial(norm_caller, **norm_fn)
 
-        if normalize_before:
-            self.conv_branch = spconv.SparseSequential(
-                norm_fn(in_channels), nn.ReLU(),
-                spconv.SubMConv3d(
-                    in_channels, out_channels, kernel_size=3, padding=1, bias=False, indice_key=indice_key),
-                norm_fn(out_channels), nn.ReLU(),
-                spconv.SubMConv3d(
-                    out_channels, out_channels, kernel_size=3, padding=1, bias=False, indice_key=indice_key))
-        else:
-            self.conv_branch = spconv.SparseSequential(
-                spconv.SubMConv3d(
-                    in_channels, out_channels, kernel_size=3, padding=1, bias=False, indice_key=indice_key),
-                norm_fn(out_channels), nn.ReLU(),
-                spconv.SubMConv3d(
-                    out_channels, out_channels, kernel_size=3, padding=1, bias=False, indice_key=indice_key),
-                norm_fn(out_channels), nn.ReLU())
+        self.conv_branch = spconv.SparseSequential(
+            norm_fn(in_channels), nn.ReLU(),
+            spconv.SubMConv3d(
+                in_channels, out_channels, kernel_size=3, padding=1, bias=False, indice_key=indice_key),
+            norm_fn(out_channels), nn.ReLU(),
+            spconv.SubMConv3d(
+                out_channels, out_channels, kernel_size=3, padding=1, bias=False, indice_key=indice_key))
 
     def forward(self, input):
         identity = spconv.SparseConvTensor(input.features, input.indices, input.spatial_shape, input.batch_size)
-
         output = self.conv_branch(input)
         output = output.replace_feature(output.features + self.i_branch(identity).features)
         # output.features += self.i_branch(identity).features

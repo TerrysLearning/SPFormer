@@ -114,24 +114,24 @@ class SPFormer(nn.Module):
         return ret
 
     def predict_by_feat(self, scan_ids, out, superpoints, insts):
-        pred_labels = out['labels']
-        pred_masks = out['masks']
-        pred_scores = out['scores']
+        pred_labels = out['labels'] # 1*400*19
+        pred_masks = out['masks']  # [400*1620]
+        pred_scores = out['scores'] # 1*400*1
 
         scores = F.softmax(pred_labels[0], dim=-1)[:, :-1]
-        scores *= pred_scores[0]
+        scores *= pred_scores[0]  # 400*18 flatten -> 7200
         labels = torch.arange(
-            self.num_class, device=scores.device).unsqueeze(0).repeat(self.decoder.num_query, 1).flatten(0, 1)
-        scores, topk_idx = scores.flatten(0, 1).topk(self.test_cfg.topk_insts, sorted=False)
-        labels = labels[topk_idx]
+            self.num_class, device=scores.device).unsqueeze(0).repeat(self.decoder.num_query, 1).flatten(0, 1) # size = [7200]
+        scores, topk_idx = scores.flatten(0, 1).topk(self.test_cfg.topk_insts, sorted=False)  # scores size = [100]
+        labels = labels[topk_idx]  # 100
         labels += 1
 
-        topk_idx = torch.div(topk_idx, self.num_class, rounding_mode='floor')
+        topk_idx = torch.div(topk_idx, self.num_class, rounding_mode='floor') 
         mask_pred = pred_masks[0]
-        mask_pred = mask_pred[topk_idx]
+        mask_pred = mask_pred[topk_idx]  # pick the masks that are very possible to be foreground instances amony 400 
         mask_pred_sigmoid = mask_pred.sigmoid()
         # mask_pred before sigmoid()
-        mask_pred = (mask_pred > 0).float()  # [n_p, M]
+        mask_pred = (mask_pred > 0).float()  # [n_p, M] # all 01000001 
         mask_scores = (mask_pred_sigmoid * mask_pred).sum(1) / (mask_pred.sum(1) + 1e-6)
         scores = scores * mask_scores
         # get mask
@@ -157,11 +157,11 @@ class SPFormer(nn.Module):
         pred_instances = []
         for i in range(cls_pred.shape[0]):
             pred = {}
-            pred['scan_id'] = scan_ids[0]
-            pred['label_id'] = cls_pred[i]
-            pred['conf'] = score_pred[i]
+            pred['scan_id'] = scan_ids[0]   # scaler
+            pred['label_id'] = cls_pred[i]  # scaler
+            pred['conf'] = score_pred[i]    # scaler
             # rle encode mask to save memory
-            pred['pred_mask'] = rle_encode(mask_pred[i])
+            pred['pred_mask'] = rle_encode(mask_pred[i]) # dict length and count
             pred_instances.append(pred)
 
         gt_instances = insts[0].gt_instances
@@ -180,3 +180,9 @@ class SPFormer(nn.Module):
         elif self.pool == 'max':
             x, _ = scatter_max(x, superpoints, dim=0)  # (B*M, media)
         return x
+
+
+
+'''
+edit 
+'''
