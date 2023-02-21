@@ -12,7 +12,7 @@ test:
 
 dataloader:
   train:
-    batch_size: 4
+    batch_size: 6
     num_workers: 8
     persistent_workers: True
   val:
@@ -29,7 +29,7 @@ data:
     type: scannetv2
     data_root: data/scannetv2
     prefix: train
-    suffix: _inst_nostuff.pth
+    suffix: _infonew.pth
     training: True
     mode: 4
     with_elastic: True

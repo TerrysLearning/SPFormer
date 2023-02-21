@@ -44,10 +44,18 @@ class ScanNetDataset(Dataset):
         self.logger.info(f'Load {self.prefix} dataset: {len(self.filenames)} scans')
 
     def get_filenames(self):
-        filenames = glob.glob(osp.join(self.data_root, self.prefix, '*' + self.suffix))
-        assert len(filenames) > 0, 'Empty dataset.'
-        filenames = sorted(filenames)
-        # filenames = filenames[:12]
+        cur = 1 # 0: normal train; 1: train small datas,  2: train big datas
+        if cur == 0:
+            filenames = glob.glob(osp.join(self.data_root, self.prefix, '*' + self.suffix))
+            assert len(filenames) > 0, 'Empty dataset.'
+            filenames = sorted(filenames)
+        elif cur == 1:
+            scene_names = torch.load(osp.join(self.data_root, 'small_scenes.pth'))
+            filenames = [osp.join(self.data_root, self.prefix, scene + self.suffix) for scene in scene_names]
+        elif cur == 2:
+            scene_names = torch.load(osp.join(self.data_root, 'big_scenes.pth'))
+            filenames = [osp.join(self.data_root, self.prefix, scene + self.suffix) for scene in scene_names] 
+        print('loaded ', len(filenames), ' files')
         return filenames
 
     def load(self, filename):
@@ -183,7 +191,7 @@ class ScanNetDataset(Dataset):
         gt_inst = torch.zeros(num_points, dtype=torch.int64)
         for i in range(num_insts):
             idx = torch.where(instance_label == i)
-            assert len(torch.unique(semantic_label[idx])) == 1
+            # assert len(torch.unique(semantic_label[idx])) == 1
             sem_id = semantic_label[idx][0]
             if semantic_label[idx][0] == -100:
                 # sem_id = 1
@@ -257,13 +265,6 @@ class ScanNetDataset(Dataset):
         # voxelize
         spatial_shape = np.clip((coords.max(0)[0][1:] + 1).numpy(), self.voxel_cfg.spatial_shape[0], None)  # long [3]
         voxel_coords, p2v_map, v2p_map = pointgroup_ops.voxelization_idx(coords, len(batch), self.mode)
-
-        # print(voxel_coords.size())
-        # print('feats', feats[0:10])
-        # print('p2vmap', p2v_map.size())
-        # print('v2pmap', v2p_map.size())
-        # print('v2pmap', v2p_map[0:100])
-        # assert 0
 
         return {
             'scan_ids': scan_ids,

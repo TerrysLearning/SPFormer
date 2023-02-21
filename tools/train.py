@@ -31,22 +31,18 @@ def train(epoch, model, dataloader, optimizer, lr_scheduler, cfg, logger, writer
     data_time = AverageMeter()
     meter_dict = {}
     end = time.time()
-
     for i, batch in enumerate(dataloader, start=1):
         data_time.update(time.time() - end)
         loss, log_vars = model(batch, mode='loss')
-
         # meter_dict
         for k, v in log_vars.items():
             if k not in meter_dict.keys():
                 meter_dict[k] = AverageMeter()
             meter_dict[k].update(v)
-
         # backward
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-
         # time and print
         remain_iter = len(dataloader) * (cfg.train.epochs - epoch + 1) - i
         iter_time.update(time.time() - end)
@@ -99,7 +95,6 @@ def eval(epoch, model, dataloader, cfg, logger, writer):
     writer.add_scalar('val/AP_25', eval_res['all_ap_25%'], epoch)
     logger.info('AP: {:.3f}. AP_50: {:.3f}. AP_25: {:.3f}'.format(eval_res['all_ap'], eval_res['all_ap_50%'],
                                                                   eval_res['all_ap_25%']))
-
     # save
     save_file = osp.join(cfg.work_dir, f'epoch_{epoch:04d}.pth')
     gorilla.save_checkpoint(model, save_file)
@@ -156,7 +151,13 @@ def main():
         if not args.skip_validate and (epoch % cfg.train.interval == 0):
             eval(epoch, model, val_loader, cfg, logger, writer)
         writer.flush()
-
+    
+    
 
 if __name__ == '__main__':
     main()
+
+
+
+# if cfg.train.multigup:
+#   

@@ -107,7 +107,6 @@ def f(fn):
     torch.save((coords, colors, superpoint, sem_labels, instance_labels), fn[:-15] + '_inst_nostuff.pth')
     print('Saving to ' + fn[:-15] + '_inst_nostuff.pth')
 
-
 # for fn in files:
 #     f(fn)
 
@@ -118,3 +117,4 @@ else:
     p.map(f, files)
 p.close()
 p.join()
+

@@ -3,8 +3,8 @@ import shutil
 
 # split scans specified in scannetv2_{train/val/test}.txt
 
-splits = ['train', 'val', 'test']
-
+# splits = ['train', 'val', 'test']
+splits = ['test']
 for split in splits:
     print('processing', split)
     f_name = 'scannetv2_{}.txt'.format(split)
@@ -13,7 +13,7 @@ for split in splits:
     os.makedirs(split, exist_ok=True)
     for scan_name in scans:
         scan = scan_name.strip()  # strip white space
-        if split == 'test':
+        if split == 'test': 
             src = 'scans_test/{}/{}_vh_clean_2.ply'.format(scan, scan)
             dest = '{}/{}_vh_clean_2.ply'.format(split, scan)
             shutil.copyfile(src, dest)
@@ -33,4 +33,5 @@ for split in splits:
             src = 'scans/{}/{}.aggregation.json'.format(scan, scan)
             dest = '{}/{}.aggregation.json'.format(split, scan)
             shutil.copyfile(src, dest)
+            print('copied', src)
 print('done')

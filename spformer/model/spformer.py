@@ -85,6 +85,21 @@ class SPFormer(nn.Module):
             return self.loss(**batch)
         elif mode == 'predict':
             return self.predict(**batch)
+    
+    def extract_feat(self, x, superpoints, v2p_map):
+        # backbone
+        x = self.input_conv(x)
+        x, _ = self.unet(x)
+        x = self.output_layer(x)
+        x = x.features[v2p_map.long()]  # (B*N, media)
+
+        # superpoint pooling
+        if self.pool == 'mean':
+            x = scatter_mean(x, superpoints, dim=0)  # (B*M, media)
+        elif self.pool == 'max':
+            x, _ = scatter_max(x, superpoints, dim=0)  # (B*M, media)
+        return x
+
 
     @cuda_cast
     def loss(self, scan_ids, voxel_coords, p2v_map, v2p_map, spatial_shape, feats, insts, superpoints, batch_offsets):
@@ -165,17 +180,4 @@ class SPFormer(nn.Module):
         gt_instances = insts[0].gt_instances
         return dict(scan_id=scan_ids[0], pred_instances=pred_instances, gt_instances=gt_instances)
 
-    def extract_feat(self, x, superpoints, v2p_map):
-        # backbone
-        x = self.input_conv(x)
-        x, _ = self.unet(x)
-        x = self.output_layer(x)
-        x = x.features[v2p_map.long()]  # (B*N, media)
-
-        # superpoint pooling
-        if self.pool == 'mean':
-            x = scatter_mean(x, superpoints, dim=0)  # (B*M, media)
-        elif self.pool == 'max':
-            x, _ = scatter_max(x, superpoints, dim=0)  # (B*M, media)
-        return x
-
+   

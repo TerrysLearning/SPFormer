@@ -22,7 +22,11 @@ class ResidualBlock(SparseModule):
         else:
             self.i_branch = spconv.SparseSequential(
                 spconv.SubMConv3d(in_channels, out_channels, kernel_size=1, bias=False))
-            
+        
+        if isinstance(norm_fn, Dict):
+            norm_caller = gorilla.nn.get_torch_layer_caller(norm_fn.pop('type'))
+            norm_fn = functools.partial(norm_caller, **norm_fn)
+
         self.conv_branch = spconv.SparseSequential(
             norm_fn(in_channels), nn.ReLU(),
             spconv.SubMConv3d(in_channels, out_channels, kernel_size=3, padding=1, bias=False, indice_key=indice_key),
@@ -55,7 +59,17 @@ class UBlock(nn.Module):
         self.return_blocks = return_blocks
         self.nPlanes = nPlanes
 
-        block = ResidualBlock
+        # process block and norm_fn caller
+        if isinstance(block, str):
+            area = ['residual', 'vgg', 'asym']
+            assert block in area, f'block must be in {area}, but got {block}'
+            if block == 'residual':
+                block = ResidualBlock
+
+        if isinstance(norm_fn, Dict):
+            norm_caller = gorilla.nn.get_torch_layer_caller(norm_fn.pop('type'))
+            norm_fn = functools.partial(norm_caller, **norm_fn)
+
         blocks = {f'block{i}': block(nPlanes[0], nPlanes[0], norm_fn, indice_key=f'subm{indice_key_id}') for i in range(block_reps)}
         blocks = OrderedDict(blocks)
         self.blocks = spconv.SparseSequential(blocks)
