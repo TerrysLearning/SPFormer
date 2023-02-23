@@ -45,6 +45,8 @@ class ScanNetDataset(Dataset):
 
     def get_filenames(self):
         cur = 1 # 0: normal train; 1: train small datas,  2: train big datas
+        if not self.training:
+            cur = 0
         if cur == 0:
             filenames = glob.glob(osp.join(self.data_root, self.prefix, '*' + self.suffix))
             assert len(filenames) > 0, 'Empty dataset.'

@@ -1,6 +1,6 @@
 train:
   seed: 1999
-  epochs: 512
+  epochs: 100
   interval: 16
   pretrain: 'exps/spf_scannet3/lastest.pth'
 
@@ -103,5 +103,5 @@ optimizer:
 lr_scheduler:
   type: PolyLR
   max_iters: 512
-  power: 0.9
+  power: 0.95
   constant_ending: 0.0
